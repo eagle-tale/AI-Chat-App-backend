@@ -39,6 +39,7 @@ exports.sendMessage = async (req, res) => {
     try {
       const knowledgeContent = await extractKnowledgeFromText(aiResponse);
       if (knowledgeContent) {
+        console.log('Extracted knowledge:', knowledgeContent);
         const knowledge = new Knowledge({
           user: '64c0e1e6af5e24f7b3e9135f', // 一時的に固定のユーザーIDを使用
           content: knowledgeContent,
