@@ -18,7 +18,7 @@ exports.generateResponse = async (messages) => {
   }
 };
 
-exports.extractKnowledge = async (text) => {
+exports.extractKnowledgeFromText = async (text) => {
   try {
     const response = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",

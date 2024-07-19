@@ -1,20 +1,6 @@
 const Conversation = require('../models/Conversation');
 const Knowledge = require('../models/Knowledge');
-const { generateResponse } = require('../services/openaiService');
-
-exports.startChat = async (req, res) => {
-  try {
-    const conversation = new Conversation({
-      user: '64c0e1e6af5e24f7b3e9135f', // 一時的に固定のユーザーIDを使用
-      messages: []
-    });
-    await conversation.save();
-    res.status(201).json({ conversationId: conversation._id });
-  } catch (error) {
-    console.error('Error starting conversation:', error);
-    res.status(500).json({ message: 'Error starting conversation', error: error.message });
-  }
-};
+const { generateResponse, extractKnowledgeFromText } = require('../services/openaiService');
 
 exports.sendMessage = async (req, res) => {
   try {
@@ -36,14 +22,19 @@ exports.sendMessage = async (req, res) => {
     await conversation.save();
 
     // ナレッジの抽出と保存
-    const knowledgeContent = await extractKnowledge(aiResponse);
-    if (knowledgeContent) {
-      const knowledge = new Knowledge({
-        user: '64c0e1e6af5e24f7b3e9135f', // 一時的に固定のユーザーIDを使用
-        content: knowledgeContent,
-        source: conversationId
-      });
-      await knowledge.save();
+    try {
+      const knowledgeContent = await extractKnowledgeFromText(aiResponse);
+      if (knowledgeContent) {
+        const knowledge = new Knowledge({
+          user: '64c0e1e6af5e24f7b3e9135f', // 一時的に固定のユーザーIDを使用
+          content: knowledgeContent,
+          source: conversationId
+        });
+        await knowledge.save();
+      }
+    } catch (knowledgeError) {
+      console.error('Error extracting or saving knowledge:', knowledgeError);
+      // ナレッジの抽出や保存に失敗しても、チャットの応答は返す
     }
 
     res.status(200).json({ message: aiResponse });
@@ -52,13 +43,3 @@ exports.sendMessage = async (req, res) => {
     res.status(500).json({ message: 'Error sending message', error: error.message });
   }
 };
-
-async function extractKnowledge(aiResponse) {
-  try {
-    const extractedKnowledge = await extractKnowledge(aiResponse);
-    return extractedKnowledge;
-  } catch (error) {
-    console.error('Error extracting knowledge:', error);
-    return null;
-  }
-}
