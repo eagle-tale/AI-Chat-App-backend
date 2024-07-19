@@ -1,4 +1,5 @@
 const Conversation = require('../models/Conversation');
+const Knowledge = require('../models/Knowledge');
 const { generateResponse } = require('../services/openaiService');
 
 exports.startChat = async (req, res) => {
@@ -34,9 +35,29 @@ exports.sendMessage = async (req, res) => {
 
     await conversation.save();
 
+    // ナレッジの抽出と保存
+    const knowledgeContent = await extractKnowledge(aiResponse);
+    if (knowledgeContent) {
+      const knowledge = new Knowledge({
+        user: '64c0e1e6af5e24f7b3e9135f', // 一時的に固定のユーザーIDを使用
+        content: knowledgeContent,
+        source: conversationId
+      });
+      await knowledge.save();
+    }
+
     res.status(200).json({ message: aiResponse });
   } catch (error) {
     console.error('Error sending message:', error);
     res.status(500).json({ message: 'Error sending message', error: error.message });
   }
 };
+
+async function extractKnowledge(aiResponse) {
+  // ここでAIの応答からナレッジを抽出するロジックを実装します
+  // 簡単な例として、応答が50文字以上の場合にナレッジとして扱います
+  if (aiResponse.length >= 50) {
+    return aiResponse;
+  }
+  return null;
+}
