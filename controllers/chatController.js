@@ -54,10 +54,11 @@ exports.sendMessage = async (req, res) => {
 };
 
 async function extractKnowledge(aiResponse) {
-  // ここでAIの応答からナレッジを抽出するロジックを実装します
-  // 簡単な例として、応答が50文字以上の場合にナレッジとして扱います
-  if (aiResponse.length >= 50) {
-    return aiResponse;
+  try {
+    const extractedKnowledge = await extractKnowledge(aiResponse);
+    return extractedKnowledge;
+  } catch (error) {
+    console.error('Error extracting knowledge:', error);
+    return null;
   }
-  return null;
 }
